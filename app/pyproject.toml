@@ -1,0 +1,18 @@
+[project]
+name = "tech-prep"
+version = "0.1.0"
+description = "Adaptive technical interview & certification prep powered by Claude"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.49.0",
+]
+
+[project.scripts]
+tech-prep = "tech_prep:run"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
