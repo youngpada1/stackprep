@@ -1,5 +1,5 @@
 [project]
-name = "tech-prep"
+name = "stackprep"
 version = "0.1.0"
 description = "Adaptive technical interview & certification prep powered by Claude"
 requires-python = ">=3.11"
@@ -8,7 +8,7 @@ dependencies = [
 ]
 
 [project.scripts]
-tech-prep = "tech_prep:run"
+stackprep = "tech_prep:run"
 
 [build-system]
 requires = ["hatchling"]
