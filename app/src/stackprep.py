@@ -337,6 +337,7 @@ def generate_study_plan(client: anthropic.Anthropic, messages: list[dict],
 # ──────────────────────────────────────────────────────────────────────────────
 
 CV_CACHE_PATH = Path(__file__).parent.parent / ".cv_cache.txt"
+JD_CACHE_PATH = Path(__file__).parent.parent / ".jd_cache.txt"
 
 
 def load_cached_cv() -> str | None:
@@ -347,6 +348,16 @@ def load_cached_cv() -> str | None:
 
 def save_cv_cache(cv: str) -> None:
     CV_CACHE_PATH.write_text(cv, encoding="utf-8")
+
+
+def load_cached_jd() -> str | None:
+    if JD_CACHE_PATH.exists():
+        return JD_CACHE_PATH.read_text(encoding="utf-8").strip() or None
+    return None
+
+
+def save_jd_cache(jd: str) -> None:
+    JD_CACHE_PATH.write_text(jd, encoding="utf-8")
 
 
 def setup() -> tuple[str, str, str, int]:
@@ -384,16 +395,28 @@ def setup() -> tuple[str, str, str, int]:
             sys.exit(1)
         save_cv_cache(cv.strip())
 
-    if mode == "certification":
-        context = get_multiline_input(
-            "\n📋 Paste the certification name + exam outline / domain list:"
-        )
-    else:
-        context = get_multiline_input("\n📋 Paste the job description:")
+    cached_jd = load_cached_jd()
+    label = "certification outline" if mode == "certification" else "job description"
+    prompt = "\n📋 Paste the certification name + exam outline / domain list:" if mode == "certification" else "\n📋 Paste the job description:"
 
-    if not context.strip():
-        print("ERROR: Job description / certification outline is required.")
-        sys.exit(1)
+    if cached_jd:
+        preview = cached_jd[:120].replace("\n", " ")
+        print(f"\n📋 Last {label} on file: {preview}…")
+        reuse = ask(f"  Use this {label}? [Y/n]: ").lower()
+        if reuse in ("", "y"):
+            context = cached_jd
+        else:
+            context = get_multiline_input(prompt)
+            if not context.strip():
+                print(f"ERROR: {label.capitalize()} is required.")
+                sys.exit(1)
+            save_jd_cache(context.strip())
+    else:
+        context = get_multiline_input(prompt)
+        if not context.strip():
+            print(f"ERROR: {label.capitalize()} is required.")
+            sys.exit(1)
+        save_jd_cache(context.strip())
 
     return mode, cv.strip(), context.strip(), num_q
 
