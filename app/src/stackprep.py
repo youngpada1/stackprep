@@ -114,7 +114,7 @@ def stream_response(api_key: str, messages: list[dict], system: str) -> str:
     full_text = ""
     payload = {
         "model": MODEL,
-        "max_tokens": 8192,
+        "max_tokens": 32000,
         "stream": True,
         "messages": [{"role": "system", "content": system}] + messages,
     }
