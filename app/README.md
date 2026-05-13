@@ -1,4 +1,4 @@
-# tech-prep
+# stackprep
 
 Adaptive technical interview & certification preparation powered by Claude Opus 4.7.
 
@@ -14,8 +14,8 @@ pip install -e .
 export ANTHROPIC_API_KEY="sk-ant-..."
 
 # Run
-tech-prep
-# or: python src/tech_prep.py
+stackprep
+# or: python src/stackprep.py
 ```
 
 ## What it does
@@ -37,7 +37,7 @@ tech-prep
 
 ```
 ══════════════════════════════════════════════════════════════
-  Technical Interview & Certification Prep
+  stackprep
 ══════════════════════════════════════════════════════════════
 
 What are you preparing for?

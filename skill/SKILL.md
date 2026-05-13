@@ -1,4 +1,4 @@
-# Technical Interview & Certification Prep
+# stackprep
 
 This skill generates adaptive technical test sets for interview and certification preparation.
 

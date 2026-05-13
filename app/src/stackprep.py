@@ -1,8 +1,8 @@
 """
-Technical Interview & Certification Prep — Anthropic SDK app.
+stackprep — Anthropic SDK app.
 
 Usage:
-    python src/tech_prep.py
+    python src/stackprep.py
 
 Flow:
   1. Choose mode (interview / certification) and number of questions per set.
@@ -27,7 +27,7 @@ from pathlib import Path
 
 import anthropic
 
-MODEL = "claude-opus-4-7"
+MODEL = "anthropic/claude-opus-4-5"
 
 # ──────────────────────────────────────────────────────────────────────────────
 # System prompt
@@ -91,13 +91,13 @@ When asked to generate a Study Pack for a list of topics, produce a JSON block
 
 The JSON must be an array of objects:
 [
-  {
+  {{
     "topic": "<concise topic name>",
-    "official_docs": [{"title": "…", "url": "…"}, …],
-    "videos": [{"title": "…", "url": "…"}, …],
-    "exam_prep": [{"title": "…", "url": "…"}, …],
+    "official_docs": [{{"title": "…", "url": "…"}}, …],
+    "videos": [{{"title": "…", "url": "…"}}, …],
+    "exam_prep": [{{"title": "…", "url": "…"}}, …],
     "summary": "<2-3 sentence explanation of why this topic matters and what to focus on>"
-  },
+  }},
   …
 ]
 
@@ -141,9 +141,7 @@ def stream_response(client: anthropic.Anthropic, messages: list[dict],
         model=MODEL,
         max_tokens=8192,
         system=system,
-        thinking={"type": "adaptive"},
         messages=messages,
-        cache_control={"type": "ephemeral"},
     ) as stream:
         for text in stream.text_stream:
             print(text, end="", flush=True)
@@ -338,9 +336,22 @@ def generate_study_plan(client: anthropic.Anthropic, messages: list[dict],
 # Setup
 # ──────────────────────────────────────────────────────────────────────────────
 
+CV_CACHE_PATH = Path(__file__).parent.parent / ".cv_cache.txt"
+
+
+def load_cached_cv() -> str | None:
+    if CV_CACHE_PATH.exists():
+        return CV_CACHE_PATH.read_text(encoding="utf-8").strip() or None
+    return None
+
+
+def save_cv_cache(cv: str) -> None:
+    CV_CACHE_PATH.write_text(cv, encoding="utf-8")
+
+
 def setup() -> tuple[str, str, str, int]:
     """Interactive setup. Returns (mode, cv, context, num_questions)."""
-    banner("Technical Interview & Certification Prep")
+    banner("stackprep")
 
     print("\nWhat are you preparing for?")
     print("  1. Technical interview")
@@ -353,10 +364,25 @@ def setup() -> tuple[str, str, str, int]:
         lo=5, hi=30, default=10,
     )
 
-    cv = get_multiline_input("\n📄 Paste your CV / resume:")
-    if not cv.strip():
-        print("ERROR: CV is required.")
-        sys.exit(1)
+    cached_cv = load_cached_cv()
+    if cached_cv:
+        preview = cached_cv[:120].replace("\n", " ")
+        print(f"\n📄 Last CV on file: {preview}…")
+        reuse = ask("  Use this CV? [Y/n]: ").lower()
+        if reuse in ("", "y"):
+            cv = cached_cv
+        else:
+            cv = get_multiline_input("\n📄 Paste your CV / resume:")
+            if not cv.strip():
+                print("ERROR: CV is required.")
+                sys.exit(1)
+            save_cv_cache(cv.strip())
+    else:
+        cv = get_multiline_input("\n📄 Paste your CV / resume:")
+        if not cv.strip():
+            print("ERROR: CV is required.")
+            sys.exit(1)
+        save_cv_cache(cv.strip())
 
     if mode == "certification":
         context = get_multiline_input(
@@ -402,7 +428,10 @@ def run() -> None:
         print("ERROR: ANTHROPIC_API_KEY is not set.")
         sys.exit(1)
 
-    client = anthropic.Anthropic(api_key=api_key)
+    client = anthropic.Anthropic(
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+    )
 
     mode, cv, context, num_q = setup()
 

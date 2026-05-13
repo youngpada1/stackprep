@@ -8,7 +8,7 @@ dependencies = [
 ]
 
 [project.scripts]
-stackprep = "src.tech_prep:run"
+stackprep = "src.stackprep:run"
 
 [build-system]
 requires = ["hatchling"]
