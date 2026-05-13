@@ -34,84 +34,59 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 # System prompt
 # ──────────────────────────────────────────────────────────────────────────────
 
-def build_system_prompt(set_size: int) -> str:
-    return f"""You are an expert technical interviewer and certification coach.
+def build_system_prompt() -> str:
+    return """You are an expert technical interviewer and certification coach delivering
+questions ONE AT A TIME in an interactive session.
 
-You generate rigorous, adaptive question sets to prepare candidates for technical
-interviews and certification exams.
+## Session flow
 
-## Modes
-- **interview**: open-ended questions calibrated to the seniority level shown in the CV
-  and the requirements of the job description.
-- **certification**: multiple-choice (single or multi-select) questions mapped to the
-  exam domains in the certification outline, weighted by domain percentage.
+Each turn you will either:
+1. Receive "NEXT_QUESTION" — generate exactly ONE new question.
+2. Receive the user's answer to the current question — score it immediately.
 
 ## Question format
 
-Always number questions Q1, Q2, … Q{set_size} where {set_size} is the requested set size.
-
 Interview mode — open-ended:
-Q1. [Conceptual] <question text>
+Q. [Conceptual] <question text>
 
 Certification mode — multiple choice:
-Q1. [Domain: <domain name>] <question text>
+Q. [Domain: <domain name>] <question text>
   a) …
   b) …
   c) …
   d) …
-ANSWER: <correct letter(s), e.g. "b" or "a,c">
+ANSWER: <correct letter(s)>
 
-Always include the ANSWER line in certification mode so answers can be scored automatically.
+Always include the ANSWER line in certification mode.
 
-## Scoring (called with tagged answers from the user)
+## Scoring format
 
-The user will send answers tagged as:
-  Q1: <answer>
-  Q2: <answer>
-  …
+When scoring, always respond in this exact structure:
 
-Score each answer:
-- Correct ✅ / Partial ⚠️ / Incorrect ❌
-- Show the model answer with a clear explanation.
-- List skill gaps revealed by incorrect answers.
-- Give total score N/{set_size}.
+RESULT: ✅ Correct  OR  RESULT: ❌ Incorrect  OR  RESULT: ⚠️ Partial
 
-## Next set
+EXPLANATION:
+<clear explanation of why the answer is right or wrong>
 
-After scoring, immediately generate the next set of {set_size} questions:
-- Higher weight on topics where the user scored < 60 %.
-- Slightly harder variants of correctly-answered topics.
-- At least 2 new topic areas not covered in the previous set.
+CORRECT ANSWER: <the correct answer>
 
-Announce: "── Set N complete (score X/{set_size}). Generating Set N+1 ──"
+DOCS:
+- <Title>: <url>
+
+(Include 1-2 real, publicly accessible doc/resource URLs relevant to this topic.)
+
+If correct or partial, still include the DOCS section with the best reference.
+
+## Adaptive difficulty
+
+Track what the user gets wrong and make subsequent questions harder on those topics.
+Never repeat the same question in a session.
 
 ## Study Pack generation
 
-When asked to generate a Study Pack for a list of topics, produce a JSON block
-(fenced as ```json … ```) followed by a human-readable markdown section.
-
-The JSON must be an array of objects:
-[
-  {{
-    "topic": "<concise topic name>",
-    "official_docs": [{{"title": "…", "url": "…"}}, …],
-    "videos": [{{"title": "…", "url": "…"}}, …],
-    "exam_prep": [{{"title": "…", "url": "…"}}, …],
-    "summary": "<2-3 sentence explanation of why this topic matters and what to focus on>"
-  }},
-  …
-]
-
-Use only real, publicly accessible URLs. Prefer:
-- official_docs: official product docs, RFC, AWS/GCP/Azure docs, language docs
-- videos: YouTube (freeCodeCamp, TechWorld with Nana, official vendor channels)
-- exam_prep: A Cloud Guru, Udemy, Whizlabs, official exam guides, free practice tests
-
-## Quality rules
-- Questions must reflect the LATEST stable docs for every technology.
-- No repeated questions within a session.
-- Specify dialect/runtime for code/SQL (e.g. PostgreSQL 16, Python 3.12, dbt 1.8).
-- For cert prep, cite the exam domain for every question.
+When asked to generate a Study Pack, produce a JSON block (```json … ```) then markdown.
+JSON schema per topic: {{"topic","official_docs":[{{"title","url"}}],"videos":[{{"title","url"}}],"exam_prep":[{{"title","url"}}],"summary"}}
+Use only real, publicly accessible URLs.
 """
 
 
@@ -150,7 +125,10 @@ def stream_response(api_key: str, messages: list[dict], system: str) -> str:
         "X-Title": "stackprep",
     }
     with httpx.stream("POST", OPENROUTER_URL, json=payload, headers=headers, timeout=120) as r:
-        r.raise_for_status()
+        if r.status_code >= 400:
+            body = r.read()
+            print(f"\nERROR {r.status_code}: {body.decode()}")
+            r.raise_for_status()
         for line in r.iter_lines():
             if line.startswith("data: ") and line != "data: [DONE]":
                 chunk = json.loads(line[6:])
@@ -432,11 +410,12 @@ def setup() -> tuple[str, str, str, int]:
     return mode, cv.strip(), context.strip(), num_q
 
 
-def build_initial_message(cv: str, context: str, mode: str, num_q: int) -> str:
+def build_initial_message(cv: str, context: str, mode: str) -> str:
     label = "Certification outline" if mode == "certification" else "Job description"
     return textwrap.dedent(f"""
-        Analyse the CV and {label.lower()} below.
-        Generate **Set 1** of exactly {num_q} questions calibrated to the candidate's level.
+        Analyse the CV and {label.lower()} below. Give a 3-line analysis
+        (seniority level, key domains, top skill gaps), then wait — I will ask
+        for questions one at a time by sending NEXT_QUESTION.
 
         --- CV ---
         {cv}
@@ -445,10 +424,6 @@ def build_initial_message(cv: str, context: str, mode: str, num_q: int) -> str:
         {context}
 
         Mode: {mode}
-        Questions per set: {num_q}
-
-        Begin with a 3-line analysis (seniority level, key domains, top skill gaps),
-        then present the {num_q} questions.
     """).strip()
 
 
@@ -457,82 +432,95 @@ def build_initial_message(cv: str, context: str, mode: str, num_q: int) -> str:
 # ──────────────────────────────────────────────────────────────────────────────
 
 def run() -> None:
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
-        print("ERROR: ANTHROPIC_API_KEY is not set.")
+        print("ERROR: OPENROUTER_API_KEY is not set.")
         sys.exit(1)
 
     mode, cv, context, num_q = setup()
 
-    system = build_system_prompt(num_q)
+    system = build_system_prompt()
 
-    # Derive a short session label for filenames
     first_word = context.split()[0] if context else "session"
     session_label = f"{mode}_{first_word}"
 
     messages: list[dict] = []
-    all_flagged: list[str] = []   # accumulated "study later" items across sets
-    set_num = 1
+    all_flagged: list[str] = []
+    q_num = 0
+    score = {"correct": 0, "total": 0}
 
-    # ── First set ──────────────────────────────────────────────────────────────
-    messages.append({"role": "user", "content": build_initial_message(cv, context, mode, num_q)})
-    hr(f"Generating Set {set_num} …")
-    last_assistant_text = stream_response(api_key, messages, system)
-    messages.append({"role": "assistant", "content": last_assistant_text})
+    # ── Analyse CV + context ───────────────────────────────────────────────────
+    messages.append({"role": "user", "content": build_initial_message(cv, context, mode)})
+    hr("Analysing your profile …")
+    analysis = stream_response(api_key, messages, system)
+    messages.append({"role": "assistant", "content": analysis})
 
-    # ── Loop ──────────────────────────────────────────────────────────────────
+    # ── Main loop ─────────────────────────────────────────────────────────────
     while True:
         hr("Options")
-        print("  [A] Answer the questions")
-        print("  [S] Save a Study Pack now (flagged topics so far)")
+        print("  [A] Next question")
+        print("  [S] Save Study Pack (flagged topics so far)")
         print("  [X] Exit and get Study Plan")
         choice = ask("\n  Your choice [A]: ").upper() or "A"
 
         if choice == "X":
-            # Save any outstanding flagged topics before exiting
             if all_flagged:
                 generate_study_pack(api_key, all_flagged, session_label, system)
             generate_study_plan(api_key, messages, system)
-            banner("Session complete — good luck! 🚀")
+            banner(f"Session complete — {score['correct']}/{score['total']} correct. Good luck!")
             break
 
         if choice == "S":
             generate_study_pack(api_key, all_flagged, session_label, system)
-            all_flagged = []   # reset after saving
+            all_flagged = []
             continue
 
-        # ── Collect answers ────────────────────────────────────────────────────
+        # ── Generate one question ──────────────────────────────────────────────
+        q_num += 1
+        messages.append({"role": "user", "content": "NEXT_QUESTION"})
+        hr(f"Question {q_num}")
+        question_text = stream_response(api_key, messages, system)
+        messages.append({"role": "assistant", "content": question_text})
+
+        # ── Collect answer ─────────────────────────────────────────────────────
         if mode == "certification":
-            answers = collect_cert_answers(num_q)
+            answer = ask("\n  Your answer (letter(s), e.g. b or a,c): ").strip().lower()
         else:
-            answers = collect_interview_answers(num_q)
+            print("\n  Your answer (type END on its own line when done):")
+            lines: list[str] = []
+            while True:
+                try:
+                    line = input("    ")
+                except EOFError:
+                    break
+                if line.strip().upper() == "END":
+                    break
+                lines.append(line)
+            answer = "\n".join(lines)
 
-        answer_text = format_answers_for_claude(answers)
-        messages.append({"role": "user", "content": answer_text})
+        if not answer:
+            answer = "(skipped)"
 
-        # ── Score + next set ───────────────────────────────────────────────────
-        hr("Scoring …")
-        last_assistant_text = stream_response(api_key, messages, system)
-        messages.append({"role": "assistant", "content": last_assistant_text})
-        set_num += 1
+        # ── Score ──────────────────────────────────────────────────────────────
+        messages.append({"role": "user", "content": f"My answer: {answer}"})
+        hr("Result")
+        result_text = stream_response(api_key, messages, system)
+        messages.append({"role": "assistant", "content": result_text})
 
-        # ── Study Later ────────────────────────────────────────────────────────
-        flagged_indices = pick_study_questions(num_q)
-        if flagged_indices:
-            # Pull question text from the previous set (two messages back)
-            prev_set_text = messages[-4]["content"] if len(messages) >= 4 else ""
-            items = extract_questions_from_text(prev_set_text, flagged_indices)
-            if not items:
-                # Fallback: just note the numbers
-                items = [f"Question {i} from Set {set_num - 1}" for i in flagged_indices]
-            all_flagged.extend(items)
-            print(f"\n  📌 Flagged {len(items)} question(s) for later. "
-                  f"Total flagged: {len(all_flagged)}.")
+        score["total"] += 1
+        if "RESULT: ✅" in result_text:
+            score["correct"] += 1
+        elif "RESULT: ❌" in result_text:
+            flag = ask("\n  Flag this topic for Study Later? [y/N]: ").lower()
+            if flag == "y":
+                all_flagged.append(f"Q{q_num}: {question_text[:200]}")
+                print(f"  📌 Flagged. Total flagged: {len(all_flagged)}.")
+                save_now = ask("  Save Study Pack now? [y/N]: ").lower()
+                if save_now == "y":
+                    generate_study_pack(api_key, all_flagged, session_label, system)
+                    all_flagged = []
 
-            save_now = ask("  Save Study Pack now? [y/N]: ").lower()
-            if save_now == "y":
-                generate_study_pack(api_key, all_flagged, session_label, system)
-                all_flagged = []
+        print(f"\n  Score so far: {score['correct']}/{score['total']}")
 
 
 if __name__ == "__main__":
