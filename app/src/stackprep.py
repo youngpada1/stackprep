@@ -133,8 +133,7 @@ def banner(text: str) -> None:
     print(f"\n{HEAVY}\n  {text}\n{HEAVY}")
 
 
-def stream_response(client: anthropic.Anthropic, messages: list[dict],
-                    system: str) -> str:
+def stream_response(client: anthropic.Anthropic, messages: list[dict], system: str) -> str:
     """Stream the assistant reply to stdout, return the full text."""
     full_text = ""
     with client.messages.stream(
@@ -453,7 +452,11 @@ def run() -> None:
 
     client = anthropic.Anthropic(
         api_key=api_key,
-        base_url="https://openrouter.ai/api/v1",
+        base_url="https://openrouter.ai/api",
+        default_headers={
+            "HTTP-Referer": "https://github.com/flavsferr/stackprep",
+            "X-Title": "stackprep",
+        },
     )
 
     mode, cv, context, num_q = setup()

@@ -1,0 +1,32 @@
+Cargill is committed to providing food and agricultural solutions to nourish the world in a safe, responsible, and sustainable way. Sitting at the heart of the supply chain, we partner with farmers and customers to source, make and deliver products that are vital for living. 
+Our 155,000 team members innovate with purpose, providing customers with life’s essentials so businesses can grow, communities prosper, and consumers live well. With over 160 years of experience as a family company, we look ahead while remaining true to our values. We put people first. We reach higher. We do the right thing—today and for generations to come.
+Job Purpose and Impact
+The Senior Data Engineer - Agriculture&Trading specialist designs, builds and maintains complex data systems that enable data analysis and reporting. With minimal supervision, this job ensures that large sets of data are efficiently processed and made accessible for decision making.
+Key Accountabilities
+• DATA INFRASTRUCTURE: Prepares data infrastructure to support the efficient storage and retrieval of data.
+• DATA FORMATS: Examines and resolves appropriate data formats to improve data usability and accessibility across the organization.
+• DATA & ANALYTICAL SOLUTIONS: Develops complex data products and solutions using advanced engineering and cloud based technologies, ensuring they are designed and built to be scalable, sustainable and robust.
+• DATA PIPELINES: Develops and maintains streaming and batch data pipelines that facilitate the seamless ingestion of data from various data sources, transform the data into information and move to data stores like data lake, data warehouse and others.
+• DATA SYSTEMS: Reviews existing data systems and architectures to identify areas for improvement and optimization.
+• STAKEHOLDER MANAGEMENT: Collaborates with multi-functional data and advanced analytic teams as well as with business teams to gain requirements and ensure that data solutions meet the functional and non-functional needs of various partners.
+• DATA FRAMEWORKS: Builds complex prototypes to test new concepts and implements data engineering frameworks and architectures that improve data processing capabilities and support advanced analytics initiatives.
+• AUTOMATED DEPLOYMENT PIPELINES: Develops automated deployment pipelines improving efficiency of code deployments with fit for purpose governance.
+• DATA MODELING: Performs complex data modeling aligned to datastore technologies to ensure sustainable performance, accessibility, and effective consumption by BI, analytics, and downstream systems.
+#LI-EE1 
+Qualifications
+Minimum requirement of 4 years of relevant work experience. Typically reflects 5 years or more of relevant experience.
+Data Platform Design - Designing scalable ELT data platforms on Snowflake supporting batch and real-time workloads.
+Advanced Python Engineering - Building production-grade Python pipelines and reusable data frameworks, with working knowledge of .NET services and integrations.
+Snowflake & Relational Database Expertise - Deep knowledge of Snowflake architecture, advanced SQL, and experience working with Oracle, SQL Server, and PostgreSQL.
+Batch & Real-Time Processing - Designing and operating reliable batch and streaming / real-time data pipelines using Apache Kafka and Apache Pulsar.
+Performance & Cost Optimization - Optimizing Snowflake queries, warehouse usage, and Python workloads for efficiency and scale.
+Security & Governance - Implementing access controls, data protection, and secure data-sharing patterns across data platforms.
+Reliability & Data Quality - Ensuring pipeline resilience, monitoring, and data quality across critical datasets.
+GenAI Enablement - Enabling GenAI use cases through high-quality data pipelines, including preparation of structured and unstructured data, embeddings, and integration with OpenAI (e.g., RAG-style workflows).
+
+Preferred Qualifications:
+Proven experience working in the Trading and / or Finance industry.
+Proven experience with MS Power BI and Tableau.
+Our Offer
+We provide a fast paced stimulating international environment, which will stretch your abilities and channel your talents. We also offer competitive salary and benefits combined with outstanding career development opportunities in one of the largest and most solid private companies in the world.
+We welcome applications from people with disabilities and are committed to providing an inclusive, accessible recruitment process and workplace. We encourage candidates to let us know if they require any accommodations during the recruitment or interview process so we can support them appropriately.
