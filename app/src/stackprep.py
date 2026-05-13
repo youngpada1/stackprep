@@ -25,9 +25,10 @@ import textwrap
 from datetime import datetime
 from pathlib import Path
 
-import anthropic
+import httpx
 
 MODEL = "anthropic/claude-sonnet-4.5"
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 # ──────────────────────────────────────────────────────────────────────────────
 # System prompt
@@ -133,18 +134,29 @@ def banner(text: str) -> None:
     print(f"\n{HEAVY}\n  {text}\n{HEAVY}")
 
 
-def stream_response(client: anthropic.Anthropic, messages: list[dict], system: str) -> str:
+def stream_response(api_key: str, messages: list[dict], system: str) -> str:
     """Stream the assistant reply to stdout, return the full text."""
     full_text = ""
-    with client.messages.stream(
-        model=MODEL,
-        max_tokens=8192,
-        system=system,
-        messages=messages,
-    ) as stream:
-        for text in stream.text_stream:
-            print(text, end="", flush=True)
-            full_text += text
+    payload = {
+        "model": MODEL,
+        "max_tokens": 8192,
+        "stream": True,
+        "messages": [{"role": "system", "content": system}] + messages,
+    }
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://github.com/flavsferr/stackprep",
+        "X-Title": "stackprep",
+    }
+    with httpx.stream("POST", OPENROUTER_URL, json=payload, headers=headers, timeout=120) as r:
+        r.raise_for_status()
+        for line in r.iter_lines():
+            if line.startswith("data: ") and line != "data: [DONE]":
+                chunk = json.loads(line[6:])
+                text = chunk["choices"][0]["delta"].get("content") or ""
+                print(text, end="", flush=True)
+                full_text += text
     print()
     return full_text
 
@@ -274,7 +286,7 @@ def save_study_pack(topics_json: list[dict], raw_md: str, session_label: str) ->
     return md_path
 
 
-def generate_study_pack(client: anthropic.Anthropic,
+def generate_study_pack(api_key: str,
                         flagged_items: list[str],
                         session_label: str,
                         system: str) -> None:
@@ -296,7 +308,7 @@ def generate_study_pack(client: anthropic.Anthropic,
     )
 
     messages = [{"role": "user", "content": prompt}]
-    raw = stream_response(client, messages, system)
+    raw = stream_response(api_key, messages, system)
 
     # Extract JSON
     json_match = re.search(r"```json\s*(.*?)\s*```", raw, re.DOTALL)
@@ -315,7 +327,7 @@ def generate_study_pack(client: anthropic.Anthropic,
 # Session summary / study plan
 # ──────────────────────────────────────────────────────────────────────────────
 
-def generate_study_plan(client: anthropic.Anthropic, messages: list[dict],
+def generate_study_plan(api_key: str, messages: list[dict],
                         system: str) -> None:
     hr("Final Study Plan")
     messages.append({
@@ -328,7 +340,7 @@ def generate_study_plan(client: anthropic.Anthropic, messages: list[dict],
             "- 3–5 concrete study actions per weak area."
         ),
     })
-    stream_response(client, messages, system)
+    stream_response(api_key, messages, system)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -450,15 +462,6 @@ def run() -> None:
         print("ERROR: ANTHROPIC_API_KEY is not set.")
         sys.exit(1)
 
-    client = anthropic.Anthropic(
-        api_key=api_key,
-        base_url="https://openrouter.ai/api",
-        default_headers={
-            "HTTP-Referer": "https://github.com/flavsferr/stackprep",
-            "X-Title": "stackprep",
-        },
-    )
-
     mode, cv, context, num_q = setup()
 
     system = build_system_prompt(num_q)
@@ -474,7 +477,7 @@ def run() -> None:
     # ── First set ──────────────────────────────────────────────────────────────
     messages.append({"role": "user", "content": build_initial_message(cv, context, mode, num_q)})
     hr(f"Generating Set {set_num} …")
-    last_assistant_text = stream_response(client, messages, system)
+    last_assistant_text = stream_response(api_key, messages, system)
     messages.append({"role": "assistant", "content": last_assistant_text})
 
     # ── Loop ──────────────────────────────────────────────────────────────────
@@ -488,13 +491,13 @@ def run() -> None:
         if choice == "X":
             # Save any outstanding flagged topics before exiting
             if all_flagged:
-                generate_study_pack(client, all_flagged, session_label, system)
-            generate_study_plan(client, messages, system)
+                generate_study_pack(api_key, all_flagged, session_label, system)
+            generate_study_plan(api_key, messages, system)
             banner("Session complete — good luck! 🚀")
             break
 
         if choice == "S":
-            generate_study_pack(client, all_flagged, session_label, system)
+            generate_study_pack(api_key, all_flagged, session_label, system)
             all_flagged = []   # reset after saving
             continue
 
@@ -509,7 +512,7 @@ def run() -> None:
 
         # ── Score + next set ───────────────────────────────────────────────────
         hr("Scoring …")
-        last_assistant_text = stream_response(client, messages, system)
+        last_assistant_text = stream_response(api_key, messages, system)
         messages.append({"role": "assistant", "content": last_assistant_text})
         set_num += 1
 
@@ -528,7 +531,7 @@ def run() -> None:
 
             save_now = ask("  Save Study Pack now? [y/N]: ").lower()
             if save_now == "y":
-                generate_study_pack(client, all_flagged, session_label, system)
+                generate_study_pack(api_key, all_flagged, session_label, system)
                 all_flagged = []
 
 
