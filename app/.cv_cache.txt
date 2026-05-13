@@ -1,0 +1,119 @@
+T E C H N I C A L S T A C K
+Languages & Libraries: Python (pandas, NumPy, scikit-learn, pytest,
+unittest, snowflake-connector-python), SQL, PySpark
+Platforms & Tools: Snowflake, AWS (S3, CloudWatch, Lambda,
+Glue, Athena), Azure (Blob Storage, Functions, Data Explorer),
+Docker, Terraform
+ETL & Integration: Snowpipe, dbt, Stored Procedures, REST APIs,
+LLM Integration (OpenRouter), PLM/MRP (Oracle Agile, Arena,
+custom Excel automation), BOM/version control automation
+Analytics & Reporting: Power BI, Streamlit, Quicksight, advanced
+SQL
+DevOps & Version Control: Git (GitHub, BitBucket), Liquibase,
+CI/CD pipelines, SonarQube, Snyk
+W O R K E X P E R I E N C E
+2024 - 2026 (Jan)
+IATA (SWITZERLAND)
+Data Applications Support Manager / Snowflake SME
+(Data Engineering & Architecture)
+Cloud Data Platform Architecture & Management
+Architect and manage multi-account data environments, primarily in
+Snowflake and AWS, with workflows adaptable to Azure cloud platforms.
+Design and implement metadata-driven ingestion pipelines that leverage
+Snowflake Tasks/Procedures, AWS Lambda, step functions, and Azure
+Functions with conditional automation triggers.
+Deploy version-controlled database objects via Liquibase with standardised
+naming conventions across dev, test, and prod.
+Engineer and automate infrastructure provisioning with Terraform, defining
+RBAC policies, environment boundaries, and observability layers for
+Snowflake, AWS, and Azure platforms.
+End-to-End ETL/ELT Pipeline Development
+Architect and implement end-to-end ETL/ELT pipelines from raw ingestion
+(Snowpipe, Mulesoft, S3) through orchestration (Snowflake
+Tasks/Procedures, AWS Lambda, Azure Functions) to transformed datasets
+with monitoring in CloudWatch.
+Engineer cross-cloud data storage integrations leveraging Snowflake, AWS
+S3, and Azure Blob Storage for seamless movement and availability across
+platforms.
+Data Integration & Automation
+Engineer automated data consolidation using Snowflake Secure Shares and
+shared databases (metrics
+_
+db, metrics
+_
+archive), with dynamic views
+providing full cross-platform traceability.
+Develop and maintain central STORE
+_
+METRICS procedures leveraging
+Snowflake session context for automatic source account detection, a
+pattern transferable to other metadata-driven pipelines.
+Orchestrate LOCAL
+ACCOUNT
+_
+_
+USAGE ingestion across organisational
+accounts into a unified monitoring platform, extending the approach to
+multi-cloud observability with AWS CloudWatch and Azure Monitor.
+Design and execute deployment strategies with Liquibase changelogs,
+ensuring repeatable sharing and configuration management across
+Snowflake and cloud database environments.
+Optimise Snowflake warehouse performance and cloud resource usage
+through systematic monitoring and workload analysis.
+Enterprise Metrics & Governance Architecture
+Lead enterprise-wide metrics architecture across all Snowflake
+accounts, implementing centralised control frameworks in AWS S3 with
+Terraform IaC for audits and compliance — an approach extensible to
+other cloud storage platforms.
+Design and operate automated metrics pipelines using AWS Lambda
+and CloudWatch for real-time monitoring, with Terraform managing
+external IDs, environment separation, and role ARNs across multi-cloud
+environments.
+Architect data governance solutions providing full audit trails and
+regulatory compliance across distributed cloud platforms, anchored in
+Snowflake but applicable to wider enterprise data ecosystems.
+Implement RBAC and security frameworks leveraging Snowflake’s
+ACCOUNT
+USAGE and INFORMATION
+_
+_
+SCHEMA, applying the same
+principles of access control and metadata-driven compliance across
+cloud data warehouses.
+FOCUSRITE (UK)
+PRODUCTION ENGINEER
+2021- 2024
+Data Platform Development & Integration
+Built an end-to-end data processing platform in Python + Streamlit,
+reducing processing time from 2 days to 15 minutes by automating
+complex supply chain calculations.
+Developed Python-based ETL pipelines for parsing product data, cost
+calculations, and automated reporting, ensuring accuracy and scalability.
+Designed and implemented a cloud data warehouse integration
+(Snowflake + APIs), optimising performance and reducing infrastructure
+costs by <$10K annually.
+System Integration & Automation
+Orchestrated ERP/PLM-to-data warehouse integrations via APIs and
+native connectors, eliminating manual workflows and improving
+efficiency by ~40%.
+Automated ingestion and transformation pipelines for processed
+datasets, delivering insights via Power BI dashboards for manufacturing
+operations.
+Analytics & Supply Chain Optimisation
+Transitioned manual Excel reporting into metadata-driven pipelines,
+enabling auditable, scalable analytics for manufacturing operations.
+Designed KPI frameworks and automated tracking systems to monitor
+production performance and support decision-making across supply
+chain processes.
+MOD DEVICES (GERMANY)
+PRODUCTION MANAGER
+2020 - 2021
+Developed automated Python test suites (pytest and unittest) to validate
+open-source hardware/software products in prototyping and production phases.
+Automated Bills of Materials (BOM) updates with Python, synchronizing
+mechanical part data from MRP systems and replacing manual Excel processes
+for electronic components.
+Delivered a version-controlled BOM parser that consolidated component
+changes, integrated cost data, and tracked sourcing status across vendors.
+Established auditable, automated data processes, reducing manual updates
+and increasing reliability of sourcing and product development cycles.

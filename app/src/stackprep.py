@@ -27,7 +27,7 @@ from pathlib import Path
 
 import anthropic
 
-MODEL = "anthropic/claude-opus-4-5"
+MODEL = "anthropic/claude-sonnet-4.5"
 
 # ──────────────────────────────────────────────────────────────────────────────
 # System prompt
