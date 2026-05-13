@@ -407,11 +407,19 @@ def setup() -> tuple[str, str, str, int]:
             sys.exit(1)
         save_jd_cache(context.strip())
 
-    return mode, cv.strip(), context.strip(), num_q
+    print("\n🛠  Extra stacks / topics to focus on (e.g. Terraform, AWS S3, dbt)?")
+    print("  Press Enter to skip, or type comma-separated topics:")
+    extra_raw = ask("  Topics: ").strip()
+    extra_stacks = [t.strip() for t in extra_raw.split(",") if t.strip()] if extra_raw else []
+
+    return mode, cv.strip(), context.strip(), num_q, extra_stacks
 
 
-def build_initial_message(cv: str, context: str, mode: str) -> str:
+def build_initial_message(cv: str, context: str, mode: str, extra_stacks: list[str]) -> str:
     label = "Certification outline" if mode == "certification" else "Job description"
+    extra = ""
+    if extra_stacks:
+        extra = f"\n\n--- Extra stacks / topics to include ---\n{', '.join(extra_stacks)}"
     return textwrap.dedent(f"""
         Analyse the CV and {label.lower()} below. Give a 3-line analysis
         (seniority level, key domains, top skill gaps), then wait — I will ask
@@ -421,7 +429,7 @@ def build_initial_message(cv: str, context: str, mode: str) -> str:
         {cv}
 
         --- {label} ---
-        {context}
+        {context}{extra}
 
         Mode: {mode}
     """).strip()
@@ -437,7 +445,7 @@ def run() -> None:
         print("ERROR: OPENROUTER_API_KEY is not set.")
         sys.exit(1)
 
-    mode, cv, context, num_q = setup()
+    mode, cv, context, num_q, extra_stacks = setup()
 
     system = build_system_prompt()
 
@@ -450,7 +458,7 @@ def run() -> None:
     score = {"correct": 0, "total": 0}
 
     # ── Analyse CV + context ───────────────────────────────────────────────────
-    messages.append({"role": "user", "content": build_initial_message(cv, context, mode)})
+    messages.append({"role": "user", "content": build_initial_message(cv, context, mode, extra_stacks)})
     hr("Analysing your profile …")
     analysis = stream_response(api_key, messages, system)
     messages.append({"role": "assistant", "content": analysis})
